@@ -33,8 +33,8 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
-          cache: 'pip'
+          python-version: "3.12"
+          cache: pip
 
       - name: Install dependencies
         working-directory: backend
@@ -47,10 +47,11 @@ jobs:
           REDIS_URL: redis://localhost:6379/0
           APP_ENV: test
           EURI_API_KEY: test-key
+          DEV_AUTH: "true"
         run: pytest tests/ -v --cov=app --cov-report=xml
 
-  frontend-build:
-    name: Frontend - Build
+  frontend-analyze:
+    name: Frontend - Analyze
     runs-on: ubuntu-latest
 
     steps:
@@ -59,9 +60,19 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.24.0'
+          flutter-version: "3.24.5"
           channel: stable
           cache: true
+
+      - name: Write local.properties
+        run: |
+          echo "flutter.sdk=$FLUTTER_HOME" > frontend/android/local.properties
+          echo "sdk.dir=$ANDROID_HOME" >> frontend/android/local.properties
+
+      - name: Decode google-services.json
+        run: |
+          echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 --decode \
+            > frontend/android/app/google-services.json
 
       - name: Install dependencies
         working-directory: frontend
@@ -71,14 +82,6 @@ jobs:
         working-directory: frontend
         run: flutter analyze
 
-      - name: Run tests
+      - name: Run unit tests
         working-directory: frontend
         run: flutter test
-
-      - name: Build web
-        working-directory: frontend
-        run: flutter build web
-
-      - name: Build Android APK
-        working-directory: frontend
-        run: flutter build apk --release

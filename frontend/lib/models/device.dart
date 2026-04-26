@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 class Device {
   final String id;
   final String householdId;
@@ -59,33 +61,21 @@ class Device {
   IconData get categoryIcon {
     switch (category) {
       case 'dishwasher':
-        return _Icons.dishwasher;
+        return Icons.kitchen;
       case 'washer':
-        return _Icons.washer;
+        return Icons.local_laundry_service;
       case 'dryer':
-        return _Icons.dryer;
+        return Icons.local_laundry_service;
       case 'refrigerator':
-        return _Icons.fridge;
+        return Icons.kitchen;
       case 'oven':
-        return _Icons.oven;
+        return Icons.microwave;
       case 'microwave':
-        return _Icons.microwave;
+        return Icons.microwave;
       case 'hvac':
-        return _Icons.hvac;
+        return Icons.ac_unit;
       default:
-        return _Icons.appliance;
+        return Icons.home;
     }
   }
-}
-
-// Using Unicode code points for Material Icons
-class _Icons {
-  static const dishwasher = 0xe836; // kitchen
-  static const washer = 0xf04e; // local_laundry_service
-  static const dryer = 0xf04e;
-  static const fridge = 0xe43c; // kitchen
-  static const oven = 0xf04f; // microwave
-  static const microwave = 0xf04f;
-  static const hvac = 0xe1d5; // ac_unit
-  static const appliance = 0xe88a; // home
 }
