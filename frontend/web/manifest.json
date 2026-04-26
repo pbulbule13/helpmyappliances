@@ -1,0 +1,11 @@
+{
+  "name": "HelpMyAppliances",
+  "short_name": "HelpMyAppliances",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563EB",
+  "description": "AI-Powered Appliance Troubleshooting Platform",
+  "orientation": "portrait-primary",
+  "prefer_related_applications": false
+}

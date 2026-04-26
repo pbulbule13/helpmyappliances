@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh search:*)",
+      "Bash(gh api:*)",
+      "WebFetch(domain:github.com)",
+      "WebSearch",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:api.github.com)",
+      "Bash(git clone:*)",
+      "Bash(cp -r \"C:/Users/pbkap/AppData/Local/Temp/clauderulebook/.claude/rules/\"* \"C:/Users/pbkap/Documents/euron/Projects/helpmyappliances/.claude/rules/\")",
+      "Bash(cp \"C:/Users/pbkap/AppData/Local/Temp/clauderulebook/.claude/hooks/\"* \"C:/Users/pbkap/Documents/euron/Projects/helpmyappliances/.claude/hooks/\")",
+      "Bash(cp \"C:/Users/pbkap/AppData/Local/Temp/clauderulebook/.claude/settings.json\" \"C:/Users/pbkap/Documents/euron/Projects/helpmyappliances/.claude/settings.json\")",
+      "Bash(pip install:*)",
+      "Bash(python -m pytest tests/unit/ -v)",
+      "Bash(python -m pytest tests/integration/ -v)",
+      "Bash(python -m pytest tests/ -v)"
+    ]
+  }
+}

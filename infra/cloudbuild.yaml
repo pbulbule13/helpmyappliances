@@ -1,0 +1,123 @@
+# Cloud Build pipeline — builds and deploys both backend and web frontend to Cloud Run
+# Trigger on push to main branch via Cloud Build trigger.
+#
+# Required substitutions (set in Cloud Build trigger):
+#   _REGION            e.g. us-central1
+#   _PROJECT_ID        GCP project ID
+#   _BACKEND_SERVICE   e.g. helpmyappliances-backend
+#   _FRONTEND_SERVICE  e.g. helpmyappliances-web
+#   _DB_INSTANCE       Cloud SQL instance connection name
+#   _NEXT_PUBLIC_API_URL  e.g. https://helpmyappliances-backend-xxxx-uc.a.run.app
+#   _FIREBASE_API_KEY, _FIREBASE_AUTH_DOMAIN, _FIREBASE_PROJECT_ID,
+#   _FIREBASE_STORAGE_BUCKET, _FIREBASE_MESSAGING_SENDER_ID, _FIREBASE_APP_ID
+
+substitutions:
+  _REGION: us-central1
+  _PROJECT_ID: helpmyappliances
+  _BACKEND_SERVICE: helpmyappliances-backend
+  _FRONTEND_SERVICE: helpmyappliances-web
+
+steps:
+  # ── 1. Build backend Docker image ──────────────────────────────────────────
+  - name: gcr.io/cloud-builders/docker
+    id: build-backend
+    args:
+      - build
+      - -t
+      - $_REGION-docker.pkg.dev/$_PROJECT_ID/helpmyappliances/backend:$COMMIT_SHA
+      - -t
+      - $_REGION-docker.pkg.dev/$_PROJECT_ID/helpmyappliances/backend:latest
+      - ./backend
+    waitFor: ['-']
+
+  # ── 2. Build frontend Docker image ─────────────────────────────────────────
+  - name: gcr.io/cloud-builders/docker
+    id: build-frontend
+    args:
+      - build
+      - -t
+      - $_REGION-docker.pkg.dev/$_PROJECT_ID/helpmyappliances/web:$COMMIT_SHA
+      - -t
+      - $_REGION-docker.pkg.dev/$_PROJECT_ID/helpmyappliances/web:latest
+      - --build-arg
+      - NEXT_PUBLIC_API_URL=$_NEXT_PUBLIC_API_URL
+      - --build-arg
+      - NEXT_PUBLIC_FIREBASE_API_KEY=$_FIREBASE_API_KEY
+      - --build-arg
+      - NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=$_FIREBASE_AUTH_DOMAIN
+      - --build-arg
+      - NEXT_PUBLIC_FIREBASE_PROJECT_ID=$_FIREBASE_PROJECT_ID
+      - --build-arg
+      - NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=$_FIREBASE_STORAGE_BUCKET
+      - --build-arg
+      - NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=$_FIREBASE_MESSAGING_SENDER_ID
+      - --build-arg
+      - NEXT_PUBLIC_FIREBASE_APP_ID=$_FIREBASE_APP_ID
+      - ./web
+    waitFor: ['-']
+
+  # ── 3. Push both images ─────────────────────────────────────────────────────
+  - name: gcr.io/cloud-builders/docker
+    id: push-backend
+    args:
+      - push
+      - --all-tags
+      - $_REGION-docker.pkg.dev/$_PROJECT_ID/helpmyappliances/backend
+    waitFor: [build-backend]
+
+  - name: gcr.io/cloud-builders/docker
+    id: push-frontend
+    args:
+      - push
+      - --all-tags
+      - $_REGION-docker.pkg.dev/$_PROJECT_ID/helpmyappliances/web
+    waitFor: [build-frontend]
+
+  # ── 4. Deploy backend to Cloud Run ─────────────────────────────────────────
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    id: deploy-backend
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - $_BACKEND_SERVICE
+      - --image=$_REGION-docker.pkg.dev/$_PROJECT_ID/helpmyappliances/backend:$COMMIT_SHA
+      - --region=$_REGION
+      - --platform=managed
+      - --allow-unauthenticated
+      - --port=8000
+      - --memory=1Gi
+      - --cpu=1
+      - --min-instances=0
+      - --max-instances=10
+      - --add-cloudsql-instances=$_DB_INSTANCE
+      - --set-secrets=DATABASE_URL=helpmyappliances-db-url:latest,REDIS_URL=helpmyappliances-redis-url:latest,EURI_API_KEY=helpmyappliances-euri-key:latest,FIREBASE_CREDENTIALS=helpmyappliances-firebase-creds:latest
+      - --set-env-vars=APP_ENV=production,GOOGLE_CLOUD_PROJECT=$_PROJECT_ID,GCS_BUCKET_NAME=helpmyappliances-uploads
+    waitFor: [push-backend]
+
+  # ── 5. Deploy frontend to Cloud Run ────────────────────────────────────────
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    id: deploy-frontend
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - $_FRONTEND_SERVICE
+      - --image=$_REGION-docker.pkg.dev/$_PROJECT_ID/helpmyappliances/web:$COMMIT_SHA
+      - --region=$_REGION
+      - --platform=managed
+      - --allow-unauthenticated
+      - --port=3000
+      - --memory=512Mi
+      - --cpu=1
+      - --min-instances=0
+      - --max-instances=5
+    waitFor: [push-frontend]
+
+images:
+  - $_REGION-docker.pkg.dev/$_PROJECT_ID/helpmyappliances/backend:$COMMIT_SHA
+  - $_REGION-docker.pkg.dev/$_PROJECT_ID/helpmyappliances/web:$COMMIT_SHA
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: E2_HIGHCPU_8
