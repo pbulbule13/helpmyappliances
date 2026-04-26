@@ -9,7 +9,7 @@ import type { UserResponse } from "@/lib/api/types";
 // In dev mode, firebase is not initialised — import lazily
 let firebaseAuth: import("firebase/auth").Auth | null = null;
 if (!DEV_MODE) {
-  import("@/lib/firebase").then((m) => { firebaseAuth = m.auth; });
+  import("@/lib/firebase").then((m) => { firebaseAuth = m.getFirebaseAuth(); });
 }
 
 interface AuthContextValue {
@@ -49,8 +49,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     // Firebase mode
-    import("@/lib/firebase").then(({ auth }) => {
-      const unsub = onAuthStateChanged(auth, async (user) => {
+    import("@/lib/firebase").then(({ getFirebaseAuth }) => {
+      const unsub = onAuthStateChanged(getFirebaseAuth(), async (user) => {
         setFirebaseUser(user);
         if (user) {
           try {

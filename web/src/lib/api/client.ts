@@ -22,8 +22,8 @@ async function getToken(): Promise<string> {
     return devToken(email);
   }
   // Firebase mode — lazy import so firebase SDK isn't loaded in dev mode
-  const { auth } = await import("@/lib/firebase");
-  const user = auth.currentUser;
+  const { getFirebaseAuth } = await import("@/lib/firebase");
+  const user = getFirebaseAuth().currentUser;
   if (!user) throw new Error("Not authenticated");
   return user.getIdToken();
 }
