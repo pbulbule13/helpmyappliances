@@ -4,6 +4,9 @@ import { useState, useCallback, useRef } from "react";
 import { Mic, MicOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type SpeechRecognitionInstance = any;
+
 interface VoiceInputProps {
   onTranscript: (text: string) => void;
   disabled?: boolean;
@@ -12,7 +15,7 @@ interface VoiceInputProps {
 export function VoiceInput({ onTranscript, disabled }: VoiceInputProps) {
   const [listening, setListening] = useState(false);
   const [interim, setInterim] = useState("");
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const recognitionRef = useRef<SpeechRecognitionInstance>(null);
 
   const supported =
     typeof window !== "undefined" &&
@@ -21,11 +24,9 @@ export function VoiceInput({ onTranscript, disabled }: VoiceInputProps) {
   const startListening = useCallback(() => {
     if (!supported || disabled) return;
 
-    const SpeechRec =
-      (window as typeof window & { webkitSpeechRecognition?: typeof SpeechRecognition })
-        .SpeechRecognition ||
-      (window as typeof window & { webkitSpeechRecognition?: typeof SpeechRecognition })
-        .webkitSpeechRecognition;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const w = window as any;
+    const SpeechRec = w.SpeechRecognition || w.webkitSpeechRecognition;
 
     if (!SpeechRec) return;
 
