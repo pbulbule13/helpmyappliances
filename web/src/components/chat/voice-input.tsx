@@ -35,7 +35,7 @@ export function VoiceInput({ onTranscript, disabled }: VoiceInputProps) {
     rec.interimResults = true;
     rec.maxAlternatives = 1;
 
-    rec.onresult = (e) => {
+    rec.onresult = (e: any) => {
       let interimText = "";
       let finalText = "";
       for (const result of e.results) {
