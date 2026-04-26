@@ -5,8 +5,6 @@ class AppTheme {
   static const _primaryColor = Color(0xFF2563EB); // Blue 600
   static const _secondaryColor = Color(0xFF7C3AED); // Violet 600
   static const _errorColor = Color(0xFFDC2626); // Red 600
-  static const _successColor = Color(0xFF16A34A); // Green 600
-  static const _warningColor = Color(0xFFD97706); // Amber 600
 
   static final _textTheme = GoogleFonts.interTextTheme();
 

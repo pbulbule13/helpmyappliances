@@ -11,7 +11,6 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final devicesAsync = ref.watch(deviceNotifierProvider);
-    final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(

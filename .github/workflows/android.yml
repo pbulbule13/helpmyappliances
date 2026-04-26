@@ -32,7 +32,7 @@ jobs:
 
       - name: Write local.properties (required by Flutter Gradle plugin)
         run: |
-          echo "flutter.sdk=$FLUTTER_HOME" > frontend/android/local.properties
+          echo "flutter.sdk=$FLUTTER_ROOT" > frontend/android/local.properties
           echo "sdk.dir=$ANDROID_HOME" >> frontend/android/local.properties
 
       - name: Decode google-services.json
