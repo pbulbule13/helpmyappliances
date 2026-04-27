@@ -100,8 +100,13 @@ function FirebaseLoginPage() {
       const { signInWithGoogle } = await import("@/lib/firebase");
       await signInWithGoogle();
       router.replace("/dashboard");
-    } catch {
-      toast.error("Google sign-in failed.");
+    } catch (err: unknown) {
+      const code = (err as { code?: string }).code ?? "";
+      if (code === "auth/popup-closed-by-user") {
+        // user cancelled — no toast needed
+      } else {
+        toast.error("Google sign-in failed. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -120,8 +125,19 @@ function FirebaseLoginPage() {
         toast.success("Account created!");
       }
       router.replace("/dashboard");
-    } catch {
-      toast.error("Invalid email or password");
+    } catch (err: unknown) {
+      const code = (err as { code?: string }).code ?? "";
+      if (code === "auth/user-not-found" || code === "auth/invalid-credential") {
+        toast.error("No account found with that email.");
+      } else if (code === "auth/wrong-password") {
+        toast.error("Wrong password. Try again.");
+      } else if (code === "auth/too-many-requests") {
+        toast.error("Too many attempts. Please wait a moment.");
+      } else if (code === "auth/email-already-in-use") {
+        toast.error("An account with this email already exists.");
+      } else {
+        toast.error("Sign-in failed. Check your email and password.");
+      }
     } finally {
       setLoading(false);
     }

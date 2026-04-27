@@ -48,24 +48,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // Firebase mode
-    import("@/lib/firebase").then(({ getFirebaseAuth }) => {
-      const unsub = onAuthStateChanged(getFirebaseAuth(), async (user) => {
-        setFirebaseUser(user);
-        if (user) {
-          try {
-            const profile = await apiVerifyToken();
-            setAppUser(profile);
-          } catch {
-            setAppUser(null);
-          }
-        } else {
-          setAppUser(null);
-        }
+    // Firebase mode — 5s safety timeout so the spinner never hangs indefinitely
+    // if Firebase fails to initialize (e.g. missing env vars in production)
+    const timeout = setTimeout(() => setLoading(false), 5000);
+
+    import("@/lib/firebase")
+      .then(({ getFirebaseAuth }) => {
+        const unsub = onAuthStateChanged(
+          getFirebaseAuth(),
+          async (user) => {
+            clearTimeout(timeout);
+            setFirebaseUser(user);
+            if (user) {
+              try {
+                const profile = await apiVerifyToken();
+                setAppUser(profile);
+              } catch {
+                setAppUser(null);
+              }
+            } else {
+              setAppUser(null);
+            }
+            setLoading(false);
+          },
+          () => {
+            clearTimeout(timeout);
+            setLoading(false);
+          },
+        );
+        return () => unsub();
+      })
+      .catch(() => {
+        clearTimeout(timeout);
         setLoading(false);
       });
-      return () => unsub();
-    });
+
+    return () => clearTimeout(timeout);
   }, []);
 
   return (
