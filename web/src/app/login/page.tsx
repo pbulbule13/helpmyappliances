@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { DEV_MODE, devSetEmail } from "@/lib/dev-auth";
@@ -94,20 +94,40 @@ function FirebaseLoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Handle result when Google redirects back to the app
+  useEffect(() => {
+    const handleRedirectResult = async () => {
+      try {
+        const { getGoogleRedirectResult } = await import("@/lib/firebase");
+        const result = await getGoogleRedirectResult();
+        if (result?.user) {
+          router.replace("/dashboard");
+        }
+      } catch (err: unknown) {
+        const code = (err as { code?: string }).code ?? "";
+        if (code === "auth/unauthorized-domain") {
+          toast.error("Google sign-in is not enabled for this domain. Contact support.");
+        } else if (code) {
+          toast.error("Google sign-in failed. Please try again.");
+        }
+      }
+    };
+    handleRedirectResult();
+  }, [router]);
+
   const handleGoogle = async () => {
     setLoading(true);
     try {
       const { signInWithGoogle } = await import("@/lib/firebase");
       await signInWithGoogle();
-      router.replace("/dashboard");
+      // signInWithRedirect navigates away — this line is never reached on success
     } catch (err: unknown) {
       const code = (err as { code?: string }).code ?? "";
-      if (code === "auth/popup-closed-by-user") {
-        // user cancelled — no toast needed
+      if (code === "auth/unauthorized-domain") {
+        toast.error("Google sign-in is not enabled for this domain. Contact support.");
       } else {
         toast.error("Google sign-in failed. Please try again.");
       }
-    } finally {
       setLoading(false);
     }
   };

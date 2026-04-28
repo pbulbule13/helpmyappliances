@@ -2,7 +2,8 @@ import { initializeApp, getApps, type FirebaseApp } from "firebase/app";
 import {
   getAuth,
   GoogleAuthProvider,
-  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   sendPasswordResetEmail,
@@ -40,7 +41,10 @@ const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: "select_account" });
 
 export const signInWithGoogle = () =>
-  signInWithPopup(getFirebaseAuth(), googleProvider);
+  signInWithRedirect(getFirebaseAuth(), googleProvider);
+
+export const getGoogleRedirectResult = () =>
+  getRedirectResult(getFirebaseAuth());
 
 export const signInWithEmail = (email: string, password: string) =>
   signInWithEmailAndPassword(getFirebaseAuth(), email, password);
