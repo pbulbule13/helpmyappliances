@@ -61,7 +61,6 @@ jobs:
             APP_ENV=production
             GOOGLE_CLOUD_PROJECT=helpmyappliances
             GCS_BUCKET_NAME=helpmyappliances-uploads
-            CORS_ORIGINS=http://localhost:3000,http://localhost:8080,${{ steps.web-url.outputs.url }}
           flags: >-
             --allow-unauthenticated
             --port=8000
@@ -71,6 +70,13 @@ jobs:
             --max-instances=10
             --add-cloudsql-instances=helpmyappliances:us-central1:helpmyappliances-pg
             --set-secrets=DATABASE_URL=helpmyappliances-db-url:latest,REDIS_URL=helpmyappliances-redis-url:latest,EURI_API_KEY=helpmyappliances-euri-key:latest
+
+      - name: Set CORS_ORIGINS on backend
+        run: |
+          WEB_URL="${{ steps.web-url.outputs.url }}"
+          gcloud run services update helpmyappliances-backend \
+            --region=${{ env.REGION }} \
+            --update-env-vars="^|^CORS_ORIGINS=http://localhost:3000,http://localhost:8080,${WEB_URL}"
 
   deploy-web:
     name: Deploy Web to Cloud Run
