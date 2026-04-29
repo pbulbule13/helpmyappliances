@@ -60,12 +60,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             clearTimeout(timeout);
             setFirebaseUser(user);
             if (user) {
-              try {
-                const profile = await apiVerifyToken();
-                setAppUser(profile);
-              } catch {
-                setAppUser(null);
+              // Retry up to 3× with backoff — first page-load request can race
+              // a stale CORS preflight cache entry from before a backend redeploy.
+              let profile = null;
+              for (let attempt = 0; attempt < 3; attempt++) {
+                try {
+                  profile = await apiVerifyToken();
+                  break;
+                } catch {
+                  if (attempt < 2) {
+                    await new Promise((r) => setTimeout(r, 1200 * (attempt + 1)));
+                  }
+                }
               }
+              setAppUser(profile);
             } else {
               setAppUser(null);
             }

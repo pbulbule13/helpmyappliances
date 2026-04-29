@@ -44,10 +44,17 @@ export function Sidebar() {
 
       {/* User */}
       <div className="px-4 py-3 border-b border-gray-800">
-        <p className="text-xs text-gray-400 truncate">{email}</p>
-        <p className="text-sm font-medium truncate">{name}</p>
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-brand-600 flex items-center justify-center shrink-0 text-sm font-bold text-white uppercase">
+            {name.charAt(0)}
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-medium truncate">{name}</p>
+            <p className="text-xs text-gray-400 truncate">{email}</p>
+          </div>
+        </div>
         {DEV_MODE && (
-          <span className="inline-block mt-1 text-xs bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full">
+          <span className="inline-block mt-2 text-xs bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full">
             dev mode
           </span>
         )}

@@ -31,6 +31,15 @@ jobs:
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
 
+      - name: Get web service URL for CORS allowlist
+        id: web-url
+        run: |
+          URL=$(gcloud run services describe helpmyappliances-web \
+            --region=${{ env.REGION }} \
+            --format="value(status.url)" 2>/dev/null \
+            || echo "https://helpmyappliances-web-wcvgdi4w4a-uc.a.run.app")
+          echo "url=$URL" >> $GITHUB_OUTPUT
+
       - name: Configure Docker for Artifact Registry
         run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
 
@@ -48,6 +57,11 @@ jobs:
           service: helpmyappliances-backend
           image: ${{ env.REGISTRY }}/backend:${{ github.sha }}
           region: ${{ env.REGION }}
+          env_vars: |
+            APP_ENV=production
+            GOOGLE_CLOUD_PROJECT=helpmyappliances
+            GCS_BUCKET_NAME=helpmyappliances-uploads
+            CORS_ORIGINS=http://localhost:3000,http://localhost:8080,${{ steps.web-url.outputs.url }}
           flags: >-
             --allow-unauthenticated
             --port=8000
@@ -57,7 +71,6 @@ jobs:
             --max-instances=10
             --add-cloudsql-instances=helpmyappliances:us-central1:helpmyappliances-pg
             --set-secrets=DATABASE_URL=helpmyappliances-db-url:latest,REDIS_URL=helpmyappliances-redis-url:latest,EURI_API_KEY=helpmyappliances-euri-key:latest
-            --set-env-vars=APP_ENV=production,GOOGLE_CLOUD_PROJECT=helpmyappliances,GCS_BUCKET_NAME=helpmyappliances-uploads
 
   deploy-web:
     name: Deploy Web to Cloud Run

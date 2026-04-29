@@ -46,14 +46,27 @@ export default function DashboardPage() {
     }
   };
 
+  const greeting = (() => {
+    const h = new Date().getHours();
+    if (h < 12) return "Good morning";
+    if (h < 17) return "Good afternoon";
+    return "Good evening";
+  })();
+
+  const displayName = appUser?.display_name || appUser?.email?.split("@")[0] || "";
+
   return (
     <div className="p-8">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">My Appliances</h1>
+          <h1 className="text-2xl font-bold text-gray-900">
+            {displayName ? `${greeting}, ${displayName}` : "My Appliances"}
+          </h1>
           <p className="text-gray-500 text-sm mt-0.5">
-            {appUser?.email} · {devices.length} appliance{devices.length !== 1 ? "s" : ""}
+            {devices.length === 0
+              ? "No appliances added yet"
+              : `${devices.length} appliance${devices.length !== 1 ? "s" : ""} tracked`}
           </p>
         </div>
         <div className="flex gap-2">
@@ -132,11 +145,13 @@ export default function DashboardPage() {
           <Spinner />
         </div>
       ) : devices.length === 0 ? (
-        <div className="flex flex-col items-center justify-center h-64 text-center bg-white rounded-2xl border-2 border-dashed border-gray-200">
-          <div className="text-5xl mb-3">🏠</div>
-          <h3 className="font-semibold text-gray-700 text-lg">No appliances yet</h3>
-          <p className="text-gray-400 text-sm mt-1 mb-4">
-            Photograph your appliance's model label to get started
+        <div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-2xl border-2 border-dashed border-gray-200">
+          <div className="w-20 h-20 rounded-2xl bg-brand-50 flex items-center justify-center mb-5">
+            <span className="text-4xl">🏠</span>
+          </div>
+          <h3 className="font-bold text-gray-800 text-xl">No appliances yet</h3>
+          <p className="text-gray-500 text-sm mt-2 mb-6 max-w-xs">
+            Photograph your appliance&apos;s model label — AI extracts the model number and finds the manual automatically.
           </p>
           <Link href="/scan">
             <Button>
@@ -144,6 +159,7 @@ export default function DashboardPage() {
               Add your first appliance
             </Button>
           </Link>
+          <p className="text-xs text-gray-400 mt-4">Works with refrigerators, washers, ACs, and more</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">

@@ -2,9 +2,23 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { Eye, EyeOff } from "lucide-react";
 import toast from "react-hot-toast";
 import { DEV_MODE, devSetEmail } from "@/lib/dev-auth";
 import { apiVerifyToken } from "@/lib/api/client";
+
+function passwordStrength(pw: string): { score: number; label: string; color: string } {
+  if (!pw) return { score: 0, label: "", color: "" };
+  let score = 0;
+  if (pw.length >= 8) score++;
+  if (pw.length >= 12) score++;
+  if (/[A-Z]/.test(pw)) score++;
+  if (/[0-9]/.test(pw)) score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
+  if (score <= 1) return { score, label: "Weak", color: "bg-red-500" };
+  if (score <= 3) return { score, label: "Fair", color: "bg-yellow-500" };
+  return { score, label: "Strong", color: "bg-green-500" };
+}
 
 export default function LoginPage() {
   return DEV_MODE ? <DevLoginPage /> : <FirebaseLoginPage />;
@@ -92,6 +106,7 @@ function FirebaseLoginPage() {
   const [mode, setMode] = useState<Mode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   // Handle result when Google redirects back to the app
@@ -174,17 +189,29 @@ function FirebaseLoginPage() {
     }
   };
 
+  const strength = mode === "register" ? passwordStrength(password) : null;
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand-50 to-indigo-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-brand-900 to-indigo-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl shadow-xl px-8 py-10">
-          <div className="text-center mb-8">
-            <div className="text-5xl mb-3">🔧</div>
-            <h1 className="text-2xl font-bold text-gray-900">HelpMyAppliances</h1>
+        {/* Brand header above card */}
+        <div className="text-center mb-8">
+          <div className="text-5xl mb-3">🔧</div>
+          <h1 className="text-3xl font-bold text-white">HelpMyAppliances</h1>
+          <p className="text-slate-300 text-sm mt-1">AI-powered appliance troubleshooting</p>
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-2xl px-8 py-8">
+          <div className="text-center mb-6">
+            <h2 className="text-xl font-bold text-gray-900">
+              {mode === "login" && "Welcome back"}
+              {mode === "register" && "Create your account"}
+              {mode === "reset" && "Reset your password"}
+            </h2>
             <p className="text-gray-500 text-sm mt-1">
               {mode === "login" && "Sign in to manage your appliances"}
-              {mode === "register" && "Create your free account"}
-              {mode === "reset" && "Reset your password"}
+              {mode === "register" && "Free forever · No credit card required"}
+              {mode === "reset" && "We'll send a reset link to your email"}
             </p>
           </div>
 
@@ -193,7 +220,7 @@ function FirebaseLoginPage() {
               <button
                 onClick={handleGoogle}
                 disabled={loading}
-                className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors disabled:opacity-50 shadow-sm"
               >
                 <svg className="w-5 h-5" viewBox="0 0 48 48">
                   <path fill="#4285F4" d="M44.5 20H24v8.5h11.8C34.7 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2 11.8 2 2 11.8 2 24s9.8 22 22 22c11 0 21-8 21-22 0-1.3-.2-2.7-.5-4z" />
@@ -214,31 +241,95 @@ function FirebaseLoginPage() {
           <form onSubmit={mode === "reset" ? handleReset : handleEmail} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-              <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
-                className="w-full px-3 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+                className="w-full px-3 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 transition-shadow"
+              />
             </div>
             {mode !== "reset" && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••" minLength={6}
-                  className="w-full px-3 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    minLength={6}
+                    className="w-full px-3 py-2.5 pr-10 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 transition-shadow"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+                {mode === "register" && password && strength && (
+                  <div className="mt-2">
+                    <div className="flex gap-1 h-1.5">
+                      {[1, 2, 3, 4, 5].map((i) => (
+                        <div
+                          key={i}
+                          className={`flex-1 rounded-full transition-colors ${
+                            i <= strength.score ? strength.color : "bg-gray-200"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Password strength: <span className="font-medium">{strength.label}</span>
+                      {strength.score <= 1 && " — try adding numbers or symbols"}
+                    </p>
+                  </div>
+                )}
+                {mode === "register" && !password && (
+                  <p className="text-xs text-gray-400 mt-1">Minimum 6 characters</p>
+                )}
               </div>
             )}
-            <button type="submit" disabled={loading}
-              className="w-full py-3 bg-brand-600 text-white font-semibold rounded-xl hover:bg-brand-700 disabled:opacity-50">
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 bg-brand-600 text-white font-semibold rounded-xl hover:bg-brand-700 active:scale-[0.99] transition-all disabled:opacity-50 shadow-sm"
+            >
               {loading ? "Please wait…" : mode === "login" ? "Sign in" : mode === "register" ? "Create account" : "Send reset link"}
             </button>
           </form>
 
           <div className="mt-5 text-center text-sm text-gray-500 space-y-2">
-            {mode === "login" && (<>
-              <button onClick={() => setMode("reset")} className="text-brand-600 hover:underline block w-full">Forgot password?</button>
-              <span>No account? <button onClick={() => setMode("register")} className="text-brand-600 font-medium hover:underline">Sign up free</button></span>
-            </>)}
-            {mode === "register" && (<span>Already have an account? <button onClick={() => setMode("login")} className="text-brand-600 font-medium hover:underline">Sign in</button></span>)}
-            {mode === "reset" && (<button onClick={() => setMode("login")} className="text-brand-600 hover:underline">← Back to sign in</button>)}
+            {mode === "login" && (
+              <>
+                <button onClick={() => setMode("reset")} className="text-brand-600 hover:underline block w-full">
+                  Forgot password?
+                </button>
+                <span>
+                  No account?{" "}
+                  <button onClick={() => setMode("register")} className="text-brand-600 font-medium hover:underline">
+                    Sign up free
+                  </button>
+                </span>
+              </>
+            )}
+            {mode === "register" && (
+              <span>
+                Already have an account?{" "}
+                <button onClick={() => setMode("login")} className="text-brand-600 font-medium hover:underline">
+                  Sign in
+                </button>
+              </span>
+            )}
+            {mode === "reset" && (
+              <button onClick={() => setMode("login")} className="text-brand-600 hover:underline">
+                ← Back to sign in
+              </button>
+            )}
           </div>
         </div>
       </div>
