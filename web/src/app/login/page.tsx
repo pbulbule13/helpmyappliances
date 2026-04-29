@@ -107,8 +107,10 @@ function FirebaseLoginPage() {
         const code = (err as { code?: string }).code ?? "";
         if (code === "auth/unauthorized-domain") {
           toast.error("Google sign-in is not enabled for this domain. Contact support.");
+        } else if (code === "auth/operation-not-allowed") {
+          toast.error("Google sign-in is not enabled in Firebase. Enable it in Firebase Console → Authentication → Sign-in method.");
         } else if (code) {
-          toast.error("Google sign-in failed. Please try again.");
+          toast.error(`Google error: ${code}`);
         }
       }
     };
@@ -125,8 +127,10 @@ function FirebaseLoginPage() {
       const code = (err as { code?: string }).code ?? "";
       if (code === "auth/unauthorized-domain") {
         toast.error("Google sign-in is not enabled for this domain. Contact support.");
+      } else if (code === "auth/operation-not-allowed") {
+        toast.error("Google sign-in is not enabled in Firebase. Enable it in Firebase Console → Authentication → Sign-in method.");
       } else {
-        toast.error("Google sign-in failed. Please try again.");
+        toast.error(`Google error: ${code || "unknown"}`);
       }
       setLoading(false);
     }
