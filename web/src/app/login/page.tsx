@@ -158,10 +158,10 @@ function FirebaseLoginPage() {
       router.replace("/dashboard");
     } catch (err: unknown) {
       const code = (err as { code?: string }).code ?? "";
-      if (code === "auth/user-not-found" || code === "auth/invalid-credential") {
+      if (code === "auth/user-not-found") {
         toast.error("No account found with that email.");
-      } else if (code === "auth/wrong-password") {
-        toast.error("Wrong password. Try again.");
+      } else if (code === "auth/invalid-credential" || code === "auth/wrong-password") {
+        toast.error("Incorrect email or password. Try again.");
       } else if (code === "auth/too-many-requests") {
         toast.error("Too many attempts. Please wait a moment.");
       } else if (code === "auth/email-already-in-use") {
